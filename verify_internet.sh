@@ -16,38 +16,43 @@ echo
 rfkill list
 echo
 caiu=0
+tempo=30
 while true
 do
     echo 'Verificando...'
     # verifica se ta com internet pegando o ip externo
     # http://www.if-not-true-then-false.com/2010/linux-get-ip-address/
     ip=`curl -s http://ipecho.net/plain`
-    echo "IP: $ip"
+    tam_ip=$(echo ${#ip})
+    if [ $tam_ip -lt 20 ]; then
+        echo "IP: $ip"
+    fi
     # pega a data atual
     data=`date`
-    if [ "$ip" = "" ] || [ "$ip" = "curl: (6) Could not resolve host: ipecho.net" ]
+    if [ "$ip" = "" ] || [ "$ip" = "curl: (6) Could not resolve host: ipecho.net" ] || [ $tam_ip -gt 20 ]
     then
         if [ "$caiu" -eq 1 ]
         then
-            notify-send -u low -a "$app_name" 'Internet nao voltou'
+            notify-send -u critical -a "$app_name" 'Internet nao voltou'
             echo -e "${IRed}$data - Internet nao voltou${RCol}"
         else
-            notify-send -u low -a "$app_name" 'Internet caiu'
+            notify-send -u critical -a "$app_name" 'Internet caiu'
             echo -e "${IRed}$data - Internet caiu${RCol}"
         fi
         caiu=1
-
+        tempo=$(( $tempo+5 ))
     else
         if [ "$caiu" -eq 1 ]
         then
             notify-send -u low -a "$app_name" 'Internet voltou'
             echo -e "${IBlu}$data - Internet voltou${RCol}"
+            tempo=30
         else
             echo -e "${IBlu}$data - Ainda conectado${RCol}"
         fi
         caiu=0  
     fi
-    #dorme por um minuto
-    sleep 60
+    #dorme por meio minuto
+    sleep $tempo
     echo
 done
